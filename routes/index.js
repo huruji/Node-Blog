@@ -4,6 +4,7 @@ const express = require('express');
 const crypto = require('crypto');
 const user = require('./../models/user');
 const Post = require('./../models/post');
+const Comment = require('./../models/comment');
 const router = express.Router();
 
 /* GET home page. */
@@ -163,6 +164,31 @@ router.get('/u/:name/:day/:title', function(req, res, next) {
 		})
 	})
 })
+router.post('/u/:name/:day/:title', (req, res, next) => {
+	let date = new Date();
+	let time = [date.getFullYear() + '-',
+		        (date.getMonth() + 1) + '-',
+		        date.getDate() + ' ',
+		        date.getHours() + ':',
+		        (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes())].join('')
+ 	let curComment = {
+ 		name: req.body.name,
+ 		eamil: req.body.email,
+ 		website: req.body.website,
+ 		time: time,
+ 		content: req.body.content
+ 	};
+ 	let comment = new Comment(req.params.name, req.params.day, req.params.title, curComment);
+ 	comment.save(function(err) {
+ 		if (err) {
+ 			req.flash('error', err);
+ 			return res.redirect('back');
+ 		}
+ 		req.flash('success', '留言成功');
+ 		res.redirect('back');
+ 	})
+})
+
 
 router.get('/edit/:name/:day/:title', checkLogin);
 router.get('/edit/:name/:day/:title', (req, res, next) => {
