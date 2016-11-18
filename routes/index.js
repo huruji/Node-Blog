@@ -127,7 +127,7 @@ router.get('/logout', (req, res, next) => {
 
 
 router.route('/u/:name').get(function(req, res, next) {
-	user.get(decodeURI(req.params.name), function(err, user) {
+	user.get(req.params.name, function(err, user) {
 		if(!user) {
 			req.flash('error', '用户不存在！');
 			return res.redirect('/');
@@ -149,7 +149,7 @@ router.route('/u/:name').get(function(req, res, next) {
 });
 
 router.get('/u/:name/:day/:title', function(req, res, next) {
-	Post.getOne(decodeURI(req.params.name), req.params.day, decodeURI(req.params.title), function(err, post) {
+	Post.getOne(req.params.name, req.params.day, req.params.title, function(err, post) {
 		if(err) {
 			req.flash('error', err);
 			return res.redirect('/');
@@ -167,7 +167,7 @@ router.get('/u/:name/:day/:title', function(req, res, next) {
 router.get('/edit/:name/:day/:title', checkLogin);
 router.get('/edit/:name/:day/:title', (req, res, next) => {
 	let currentUser = req.session.user;
-	Post.edit(currentUser.name, req.params.day, decodeURI(req.params.title), (err, post) => {
+	Post.edit(currentUser.name, req.params.day, req.params.title, (err, post) => {
 		if(err) {
 			req.flash('error', err);
 			return res.redirect('back');
@@ -184,7 +184,7 @@ router.get('/edit/:name/:day/:title', (req, res, next) => {
 router.post('/edit/:name/:day/:title', checkLogin);
 router.post('/edit/:name/:day/:title', (req, res, next) => {
 	let currentUser = req.session.user;
-	Post.update(currentUser.name, req.params.day, decodeURI(req.params.title), req.body.post, function(err) {
+	Post.update(currentUser.name, req.params.day, req.params.title, req.body.post, function(err) {
 		let url='/u/' + req.params.name + '/' + req.params.day + '/' + req.params.title;
 		console.log("url:"+url);
 		if(err) {
@@ -194,6 +194,19 @@ router.post('/edit/:name/:day/:title', (req, res, next) => {
 		req.flash('success', '修改成功');
 		res.redirect(url);
 	})
+})
+
+router.get('/remove/:name/:day/:title', checkLogin);
+router.get('/remove/:name/:day/:title', (req, res) => {
+	let currentUser = req.session.user;
+	post.remove(currentUser.name, req.params.day, req.params.title, function(err) {
+		if(err) {
+			req.flash('error', err);
+			return res.redirect('back');
+		}
+		req.flash('success', '删除成功');
+		req.redirect('/');
+	}) 
 })
 
 function checkLogin(req, res, next) {
