@@ -10,7 +10,8 @@ const router = express.Router();
 /* GET home page. */
 router.get('/', (req, res, next) => {
 	console.log('session.user:'+req.session.user);
-	Post.getAll(null, function(err, posts) {
+	let page = req.query.p ? parseInt(req.query.p) : 1;
+	Post.getTen(null, page, function(err, posts, total) {
 		console.log(posts)
 		if(err) {
 			posts = [];
@@ -18,6 +19,9 @@ router.get('/', (req, res, next) => {
 		res.render('index', { 
   			title: '主页',
   			posts:posts,
+  			page: page,
+  			isFirstPage: (page - 1) == 0,
+  			isLastPage: ((page - 1) * 10 + posts.length) == total,
   			user: req.session.user, 
   			success: req.flash('error').toString(),
   			error: req.flash('error').toString()
@@ -128,12 +132,13 @@ router.get('/logout', (req, res, next) => {
 
 
 router.route('/u/:name').get(function(req, res, next) {
+	let page = req.query.p ? parseInt(req.query.p) : 1;
 	user.get(req.params.name, function(err, user) {
 		if(!user) {
 			req.flash('error', '用户不存在！');
 			return res.redirect('/');
 		}
-		Post.getAll(user.name, function(err, posts) {
+		Post.getTen(user.name, page, function(err, posts, total) {
 			if(err) {
 				req.flash('error', err);
 				return res.redirect('/');
@@ -141,6 +146,9 @@ router.route('/u/:name').get(function(req, res, next) {
 			res.render('user', {
 				title: user.name,
 				posts: posts,
+				page: page,
+				isFirstPage: (page - 1) == 0,
+  				isLastPage: ((page - 1) * 10 + posts.length) == total,
 				user: req.session.user,
 				success: req.flash('success').toString(),
 				error: req.flash('error').toString()
@@ -225,7 +233,7 @@ router.post('/edit/:name/:day/:title', (req, res, next) => {
 router.get('/remove/:name/:day/:title', checkLogin);
 router.get('/remove/:name/:day/:title', (req, res) => {
 	let currentUser = req.session.user;
-	post.remove(currentUser.name, req.params.day, req.params.title, function(err) {
+	Post.remove(currentUser.name, req.params.day, req.params.title, function(err) {
 		if(err) {
 			req.flash('error', err);
 			return res.redirect('back');
@@ -233,6 +241,22 @@ router.get('/remove/:name/:day/:title', (req, res) => {
 		req.flash('success', '删除成功');
 		req.redirect('/');
 	}) 
+})
+
+router.get('/archive', function(req, res, next) {
+	Post.getArchive(function(err, posts) {
+		if(err) {
+			req.flash('error', err);
+			return res.redirect('/');
+		}
+		res.render('archive', {
+			title: '存档',
+			posts: posts,
+			user: req.session.user,
+			success: req.flash('success').toString(),
+			error: req.flash('error').toString()
+		})
+	})
 })
 
 function checkLogin(req, res, next) {

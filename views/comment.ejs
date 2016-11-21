@@ -1,4 +1,5 @@
 <br/>
+<% if(post.comments) { %>
 <% post.comments.forEach(function (comment, index) { %>
 <p>
 	<a href="<%= comment.website %>"><%= comment.name %></a>
@@ -7,7 +8,7 @@
 <p>
 	<%- comment.content %>
 </p>
-<% }) %>
+<% }) }%>
 <form method="post">
 姓名：<input type="text" name="name" <% if(user) {%> value="<%= user.name %>" <% } %> /><br/>
 邮箱：<input type="text" name="email" <% if(user) {%> value="<%= user.email %>" <% } %> /><br/>

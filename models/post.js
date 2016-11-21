@@ -107,6 +107,44 @@ Post.getOne = function (name, day, title, callback) {
 		});
 	});
 };
+Post.getTen = function(name, page, callback) {
+	mongodb.open(function(err, db) {
+		if(err) {
+			return callback(err);
+		}
+		db.collection('posts', function(err, collection) {
+			if(err) {
+				mongodb.close();
+				return callback(err);
+			}
+			var query = {};
+			if(name) {
+				query.name = name;
+			} 
+			collection.count(query, function(err, total) {
+				if(err) {
+					mongodb.close();
+					return callback(err);
+				}
+				collection.find(query, {
+					skip: (page - 1) * 10,
+					limit: 10
+				}).sort({
+					time: -1
+				}).toArray(function(err, docs) {
+					mongodb.close();
+					if (err) {
+						return callback(err);
+					}
+					docs.forEach(function (doc) {
+						doc.post = markdown.toHTML(doc.post);
+					});
+					callback(null, docs, total);
+				})
+			})
+		})
+	})
+}
 
 Post.edit = function(name, day, title, callback) {
 	mongodb.open(function(err, db) {
@@ -183,5 +221,31 @@ Post.remove = function(name, day, title, callback) {
 			});
 		});
 	});
+}
+Post.getArchive = function(callback) {
+	mongodb.open(function(err, db) {
+		if(err) {
+			return callback(err);
+		}
+		db.collection('posts', function(err, collection) {
+			if(err) {
+				mongodb.close();
+				return callback(err);
+			}
+			collection.find({}, {
+				"name": 1,
+				"time": 1,
+				"title": 1
+			}).sort({
+				time: -1
+			}).toArray(function(err, docs) {
+				mongodb.close();
+				if(err) {
+					return callback(err);
+				}
+				return callback(null, docs);
+			})
+		})
+	})
 }
 module.exports = Post;
